@@ -1,13 +1,10 @@
+import random
 
-#Настройки клавиатуры
-settings = dict(one_time=False, inline=False)
 
-#Виды CALLBACK кнопок, которые разрешены в сообществе
-CALLBACK_TYPES = ('show_snackbar', #Всплывающее сообщение
-                  'open_link', #Открыть ссылку
-                  'open_app') #Открыть приложение
+CALLBACK_TYPES = ('show_snackbar',
+                  'open_link',
+                  'open_app')
 
-#Команды
 commands = {
     'search': {'in': ['search', 'поиск', 'искать', 'найти'],
               'out': ['Вот что я нашел'],
@@ -58,3 +55,8 @@ commands = {
              'key': 'none',
              'keyboard': 'menu'}
 }
+
+
+def get_answer(el):
+    answer = f'{random.choice(el["out"])} {el.get("content")}'
+    return answer

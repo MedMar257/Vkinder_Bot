@@ -13,7 +13,6 @@ class ClassVK(object):
         self.API_URL = API_URL
 
     def check_token(self, user_id, access_token):
-        # Проверим токен на валидность и принадлежность пользователю
         method = 'users.get'
         print(method, )
         url = self.API_URL + method
@@ -29,10 +28,7 @@ class ClassVK(object):
         for r in response:
             if r.get('id'):
                 if r.get('id') == user_id:
-                    # Токен корректный
                     return True
-
-        # Токен не корректный
         return False
 
     def get_info(self, user_ids):
@@ -76,7 +72,6 @@ class ClassVK(object):
         attachments = []
         content = ''
         if id != 0:
-            # Параметры пользователя
             params = self.get_info(id)
 
             if params:
@@ -112,7 +107,6 @@ class ClassVK(object):
         ids = []
         for r in response.get('items'):
             if r.get("can_access_closed"):
-                # print(r)
                 ids.append(r.get("id"))
         return ids
 
@@ -130,7 +124,6 @@ class ClassVK(object):
             sex = 0
         return sex
 
-    # функция для запроса данных от vk.API с контролем ошибки 'Too many requests per second'
     @staticmethod
     def get_vk_data(url, params) -> response:
         resp = ''
@@ -138,10 +131,8 @@ class ClassVK(object):
         while repeat:
             resp = requests.get(url, params=params)
             data = resp.json()
-            # если запрос вернул ошибку 'Too many requests per second'
             if 'error' in data and 'error_code' in data['error'] and data['error']['error_code'] == 6:
                 time.sleep(2)
             else:
                 repeat = False
         return resp
-    # end get_vk_data()
