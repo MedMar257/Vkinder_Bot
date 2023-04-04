@@ -1,14 +1,13 @@
 import vk_api
-import json
 from random import randrange
 from Initial_data import community_token, community_id, API_VERSION
-from vk_api.longpoll import VkLongPoll, VkEventType
+from vk_api import VkLongPoll, VkEventType
 from vk_bot import ClassVK
 from user_processing import UserProcessing
-from commands import *
-from database import DataBase
+from database import *
 from keyboard import ClassKeyboard
-
+from commands import *
+import json
 
 def main():
 
@@ -63,11 +62,9 @@ def main():
                         random_id=randrange(10 ** 7),
                         peer_id=event.object.peer_id,
                         keyboard=ClassKeyboard.get_keyboard(command['keyboard']),
-                        message=commands.get_answer(command))
+                        message=get_answer(command))
             else:
                 continue
             connection_bot.upd_settings()
 
 
-if __name__ == '__main__':
-    main()

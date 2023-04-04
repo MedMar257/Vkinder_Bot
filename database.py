@@ -1,6 +1,7 @@
 import psycopg2
 from Initial_data import Username, Password, Host, Database
 from database_tables import *
+from dataclass import *
 
 
 class DataBase(object):
@@ -35,14 +36,6 @@ class DataBase(object):
             return False
         return True
 
-    def vk_user_update_last_visit(self, vk_user: VKUserData) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "UPDATE vk_user SET last_vizit WHERE vk_id == vk.user.vk_id"
-            result = cursor.execute(query, (vk_user.vk_id,))
-        if result is None:
-            return False
-        return True
-
     def new_vkuser(self, vk_user: VKUserData) -> bool:
         res = True
         with self.connection, self.connection.cursor() as cursor:
@@ -50,18 +43,8 @@ class DataBase(object):
                 query = "INSERT INTO vk_user values( vk_id=vk_user.vk_id," \
                         "first_name=vk_user.first_name," \
                         "last_name=vk_user.last_name," \
-                        "bdate=vk_user.bdate," \
-                        "gender=vk_user.gender," \
-                        "city_id=vk_user.city_id," \
-                        "city_title=vk_user.city_title," \
-                        "vkdomain=vk_user.vkdomain," \
-                        "last_visit=vk_user.last_visit" \
                         ")"
                 result = cursor.execute(query)
-                if result is None:
-                    res = False
-            else:
-                result = self.vk_user_update_last_visit(vk_user)
                 if result is None:
                     res = False
             return res
@@ -91,6 +74,15 @@ class DataBase(object):
             return False
         return True
 
+    def get_black_list(self, vk_id: int) -> list:
+        with self.connection, self.connection.cursor() as cursor:
+            query = "SELECT * FROM black_list.c.blk_id WHERE vk_id == vk_id"
+            cursor.execute(query)
+            result = cursor.fetchall()
+        if result is None or len(result) == 0:
+            return list()
+        return list.copy(result)
+
     def del_black_id(self, vk_id: int, blk_id: int) -> bool:
         with self.connection, self.connection.cursor() as cursor:
             query = "DELETE FROM black_list WHERE vk_id == vk_id AND blk_id == blk_id"
@@ -98,6 +90,15 @@ class DataBase(object):
         if result is None:
             return False
         return True
+
+    def get_favorites(self, vk_id: int) -> list:
+        with self.connection, self.connection.cursor() as cursor:
+            query = "SELECT * FROM favorites.c.fav_id WHERE vk_id == vk_id"
+            cursor.execute(query)
+            result = cursor.fetchall()
+        if result is None or len(result) == 0:
+            return list()
+        return list.copy(result)
 
     def new_favorite(self, vk_id: int, fav_id: int) -> bool:
         with self.connection, self.connection.cursor() as cursor:
@@ -111,15 +112,6 @@ class DataBase(object):
             self.del_black_id(vk_id, fav_id)
         return True
 
-    def get_favorites(self, vk_id: int) -> list:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "SELECT * FROM favorites.c.fav_id WHERE vk_id == vk_id"
-            cursor.execute(query)
-            result = cursor.fetchall()
-        if result is None or len(result) == 0:
-            return list()
-        return list.copy(result)
-
     def del_favotite(self, vk_id: int, fav_id: int) -> bool:
         with self.connection, self.connection.cursor() as cursor:
             query = "DELETE FROM favorites WHERE vk_id == vk_id AND fav_id == fav_id"
@@ -131,15 +123,6 @@ class DataBase(object):
             query = "DELETE FROM favorites WHERE vk_id == vk_id"
             cursor.execute(query)
         return True
-
-    def get_black_list(self, vk_id: int) -> list:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "SELECT * FROM black_list.c.blk_id WHERE vk_id == vk_id"
-            cursor.execute(query)
-            result = cursor.fetchall()
-        if result is None or len(result) == 0:
-            return list()
-        return list.copy(result)
 
     def new_black_id(self, vk_id: int, blk_id: int) -> bool:
         with self.connection, self.connection.cursor() as cursor:
@@ -175,7 +158,7 @@ class DataBase(object):
         else:
             return True
 
-    def get_setings(self, vk_user: VKUserData) -> bool:
+    def get_settings(self, vk_user: VKUserData) -> bool:
         with self.connection, self.connection.cursor() as cursor:
             query = "SELECT * FROM settings WHERE vk_id == vk_id"
             cursor.execute(query)
@@ -193,22 +176,21 @@ class DataBase(object):
             result = cursor.fetchone()
         return result
 
-    def set_setings(self, vk_user: VKUserData) -> bool:
+    def set_settings(self, vk_user: VKUserData) -> bool:
         with self.connection, self.connection.cursor() as cursor:
             query = "INSERT INTO settings values( vk_id=vk_user.vk_id," \
-                        "access_token=vk_user.settings.access_token," \
                         "srch_offset=vk_user.settings.srch_offset," \
                         "age_from=vk_user.settings.age_from," \
                         "age_to=vk_user.settings.age_to," \
-                        "last_command=vk_user.settings.last_command" \
                         ")"
             cursor.execute(query)
         return True
 
-    def upd_setings(self, vk_user: VKUserData) -> bool:
+    def upd_settings(self, vk_user: VKUserData) -> bool:
         with self.connection, self.connection.cursor() as cursor:
             query = "UPDATE settings SET values WHERE vk_id == vk.user.vk_id"
             result = cursor.execute(query, (vk_user.vk_id,))
         if result is None:
             return False
         return True
+

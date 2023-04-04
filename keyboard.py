@@ -1,8 +1,10 @@
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
+
 class ClassKeyboard:
     def __init__(self):
         print('init')
+        self.settings = dict(one_time=False, inline=True)
 
     @staticmethod
     def search():

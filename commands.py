@@ -1,6 +1,5 @@
 import random
 
-
 CALLBACK_TYPES = ('show_snackbar',
                   'open_link',
                   'open_app')
@@ -32,12 +31,12 @@ commands = {
                   'keyboard': 'settings'},
     'hello': { 'in': ['hello', 'привет', 'hello', 'hi', 'privet', 'hey'],
               'out': ['Приветствую', 'Здравствуйте', 'Привет!'],
-              'key': 'hellow',
+              'key': 'hello',
               'keyboard': 'menu' },
-    'menu': { 'in': ['back', 'назад', 'меню'],
-             'out': ['Назад' ],
-              'key': 'back',
-              'keyboard': 'back'},
+    'menu': { 'in': ['menu', 'меню'],
+             'out': ['Меню' ],
+              'key': 'menu',
+              'keyboard': 'menu'},
     'back': {'in': ['назад'],
              'out': ['Назад'],
              'key': 'back',

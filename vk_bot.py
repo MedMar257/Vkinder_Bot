@@ -2,8 +2,8 @@ from pprint import pprint
 import time
 from urllib import response
 import requests
-from Initial_data import user_token, API_VERSION, API_URL
-from database_tables import VKUserData
+from Initial_data import API_VERSION, API_URL, user_token
+from dataclass import VKUserData
 
 
 class ClassVK(object):
@@ -11,25 +11,6 @@ class ClassVK(object):
     def __init__(self, access_token=user_token):
         self.access_token = access_token
         self.API_URL = API_URL
-
-    def check_token(self, user_id, access_token):
-        method = 'users.get'
-        print(method, )
-        url = self.API_URL + method
-        params = {
-            'user_ids': user_id,
-            'access_token': access_token,
-            'v': API_VERSION
-        }
-
-        res = self.get_vk_data(url, params)
-        response = res.json().get("response")
-
-        for r in response:
-            if r.get('id'):
-                if r.get('id') == user_id:
-                    return True
-        return False
 
     def get_info(self, user_ids):
         method = 'users.get'
@@ -93,21 +74,15 @@ class ClassVK(object):
         pprint(vk_user.settings)
         pprint(vk_user.city_id)
         url = self.API_URL + method
-        access_token = vk_user.settings.access_token
-        if not access_token:
-            access_token = self.access_token
         params = dict(count=count, city=vk_user.city_id, offset=offset,
                       age_from=vk_user.settings.age_from, age_to=vk_user.settings.age_to,
-                      sex=self.sex_invert(vk_user.gender), access_token=access_token, v=API_VERSION, has_photo=1,
+                      sex=self.sex_invert(vk_user.gender), v=API_VERSION, has_photo=1,
                       status=6, sort=0)
         print(method, params)
         res = self.get_vk_data(url, params)
         print(res.json())
-        response = res.json().get("response")
+        res.json().get("response")
         ids = []
-        for r in response.get('items'):
-            if r.get("can_access_closed"):
-                ids.append(r.get("id"))
         return ids
 
     def search(self, vk_user: VKUserData, offset, count):
