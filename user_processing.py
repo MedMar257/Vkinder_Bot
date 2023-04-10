@@ -1,8 +1,7 @@
+from commands import commands
 from database import DataBase
 from dataclass import VKUserData
-from vk_api import VkEventType
-from commands import commands
-
+from vk_api.longpoll import VkEventType
 
 class UserProcessing(object):
 
@@ -104,8 +103,6 @@ class UserProcessing(object):
     def get_user_id(event):
         if event.type == VkEventType.MESSAGE_NEW:
             user_id = event.object.user_id
-        elif event.type == VkEventType.MESSAGE_REPLY:
-            user_id = None
         else:
             user_id = None
             print(f'ERROR EVENT {event}')
@@ -115,8 +112,6 @@ class UserProcessing(object):
     def get_command_text(event):
         if event.type == VkEventType.MESSAGE_NEW:
             return event.object.payload.get('type')
-        elif event.type == VkEventType.MESSAGE_REPLY:
-            return None
         else:
             print(f'ERROR EVENT {event}')
             return None

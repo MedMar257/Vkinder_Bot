@@ -1,4 +1,3 @@
-import random
 
 CALLBACK_TYPES = ('show_snackbar',
                   'open_link',
@@ -56,6 +55,4 @@ commands = {
 }
 
 
-def get_answer(el):
-    answer = f'{random.choice(el["out"])} {el.get("content")}'
-    return answer
+

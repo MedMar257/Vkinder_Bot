@@ -3,7 +3,7 @@ vk_user = """CREATE TABLE IF NOT EXISTS vk_user (
                         -- id SERIAL PRIMARY KEY,
                        vk_id INTEGER PRIMARY KEY,
                        first_name VARCHAR(40) NOT NULL,
-                       last_name VARCHAR(40),
+                       last_name VARCHAR(40)
                        );"""
 
 favorites = """CREATE TABLE IF NOT EXISTS favorites ( 
@@ -30,7 +30,7 @@ last_search = """CREATE TABLE IF NOT EXISTS last_search (
 settings = """CREATE TABLE IF NOT EXISTS settings (
                     vk_id INTEGER NOT NULL UNIQUE,
                     age_from INTEGER,
-                    age_to INTEGER,
+                    age_to INTEGER
                     );"""
 
 CREATE_TABLES = vk_user + favorites + black_list + \

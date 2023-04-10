@@ -74,16 +74,15 @@ class ClassVK(object):
         pprint(vk_user.settings)
         pprint(vk_user.city_id)
         url = self.API_URL + method
+        ids = []
         params = dict(count=count, city=vk_user.city_id, offset=offset,
                       age_from=vk_user.settings.age_from, age_to=vk_user.settings.age_to,
                       sex=self.sex_invert(vk_user.gender), v=API_VERSION, has_photo=1,
                       status=6, sort=0)
         print(method, params)
         res = self.get_vk_data(url, params)
-        print(res.json())
-        res.json().get("response")
-        ids = []
-        return ids
+        res.json().get("res")
+        return res
 
     def search(self, vk_user: VKUserData, offset, count):
         search_list = self.users_search(vk_user, count=count, offset=offset)

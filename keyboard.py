@@ -1,4 +1,6 @@
+import random
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+from commands import commands
 
 
 class ClassKeyboard:
@@ -55,3 +57,8 @@ class ClassKeyboard:
         else:
             keyboard = ClassKeyboard.menu()
         return keyboard.get_keyboard()
+
+    @staticmethod
+    def get_answer(el=commands):
+        answer = f'{random.choice(el["out"])} {el.get("content")}'
+        return answer
