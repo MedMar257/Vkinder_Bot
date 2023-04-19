@@ -102,7 +102,7 @@ class UserProcessing(object):
     @staticmethod
     def get_user_id(event):
         if event.type == VkEventType.MESSAGE_NEW:
-            user_id = event.object.user_id
+            user_id = event.user_id
         else:
             user_id = None
             print(f'ERROR EVENT {event}')
@@ -111,7 +111,7 @@ class UserProcessing(object):
     @staticmethod
     def get_command_text(event):
         if event.type == VkEventType.MESSAGE_NEW:
-            return event.object.payload.get('type')
+            return event.payload.get('type')
         else:
             print(f'ERROR EVENT {event}')
             return None

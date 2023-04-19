@@ -34,26 +34,26 @@ def main():
             connection_bot.new_vk_user(user_id)
             command = connection_bot.run_command(command=connection_bot.get_command(event))
             if event.type == VkEventType.MESSAGE_NEW:
-                if event.obj.message['text'] != '':
+                if event.message['text'] != '':
                     if event.from_user:
                         vk.messages.send(
                             user_id=user_id,
                             attachment=command.get('attachment'),
                             random_id=randrange(10 ** 7),
-                            peer_id=event.obj.message['from_id'],
+                            peer_id=event.message['from_id'],
                             message=commands.get_answer(command))
             elif event.type == VkEventType.MESSAGE_EVENT:
-                if event.object.payload.get('type') in CALLBACK_TYPES:
-                    if event.object.payload.get('type') == 'show_snackbar':
-                        if 'черный' in event.object.payload.get('text'):
-                            connection_bot.add_black_list(event.object.user_id)
-                        elif 'избранное' in event.object.payload.get('text'):
+                if event.payload.get('type') in CALLBACK_TYPES:
+                    if event.payload.get('type') == 'show_snackbar':
+                        if 'черный' in event.payload.get('text'):
+                            connection_bot.add_black_list(event.user_id)
+                        elif 'избранное' in event.payload.get('text'):
                             connection_bot.add_favorite_list(event.object.user_id)
 
                     vk.messages.sendMessageEventAnswer(
-                        event_id=event.object.event_id,
+                        event_id=event.event_id,
                         user_id=user_id,
-                        peer_id=event.object.peer_id,
+                        peer_id=event.peer_id,
                         event_data=json.dumps(event.object.payload))
                 else:
                     print(command.get('attachment'))
@@ -61,7 +61,7 @@ def main():
                         user_id=user_id,
                         attachment=command.get('attachment'),
                         random_id=randrange(10 ** 7),
-                        peer_id=event.object.peer_id,
+                        peer_id=event.peer_id,
                         keyboard=ClassKeyboard.get_keyboard(command['keyboard']),
                         message=ClassKeyboard.get_answer(command))
             else:
