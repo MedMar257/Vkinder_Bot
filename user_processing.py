@@ -111,7 +111,7 @@ class UserProcessing(object):
     @staticmethod
     def get_command_text(event):
         if event.type == VkEventType.MESSAGE_NEW:
-            return event.payload.get('type')
+            return event.get('type')
         else:
             print(f'ERROR EVENT {event}')
             return None
@@ -132,7 +132,6 @@ class UserProcessing(object):
             elif key == 'favorites':
                 content = self.get_list(content, self.db.get_favorites(self.vkUser.vk_id))
         command['content'] = content
-        self.vkUser.settings.last_command = key
         return command
 
     def get_command(self, event):

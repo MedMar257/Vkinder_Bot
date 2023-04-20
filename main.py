@@ -43,18 +43,18 @@ def main():
                             peer_id=event.message['from_id'],
                             message=commands.get_answer(command))
             elif event.type == VkEventType.MESSAGE_EVENT:
-                if event.payload.get('type') in CALLBACK_TYPES:
-                    if event.payload.get('type') == 'show_snackbar':
-                        if 'черный' in event.payload.get('text'):
+                if event.get('type') in CALLBACK_TYPES:
+                    if event.get('type') == 'show_snackbar':
+                        if 'черный' in event.get('text'):
                             connection_bot.add_black_list(event.user_id)
-                        elif 'избранное' in event.payload.get('text'):
-                            connection_bot.add_favorite_list(event.object.user_id)
+                        elif 'избранное' in event.get('text'):
+                            connection_bot.add_favorite_list(event.user_id)
 
                     vk.messages.sendMessageEventAnswer(
                         event_id=event.event_id,
                         user_id=user_id,
                         peer_id=event.peer_id,
-                        event_data=json.dumps(event.object.payload))
+                        event_data=json.dumps(event))
                 else:
                     print(command.get('attachment'))
                     vk.messages.send(
