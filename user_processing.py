@@ -1,11 +1,11 @@
 from commands import commands
-from database import DataBase
+from database import conn_db
 from dataclass import VKUserData
 from vk_api.longpoll import VkEventType
 
 class UserProcessing(object):
 
-    def __init__(self, db: DataBase, api):
+    def __init__(self, db: conn_db, api):
         self.db = db
         self.api = api
         self.vkUser = None

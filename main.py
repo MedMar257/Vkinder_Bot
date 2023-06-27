@@ -25,7 +25,7 @@ def main():
         print('Ошибка инициализации API VK')
         print(err)
         return False
-    connection_bot = UserProcessing(DataBase(), ClassVK(community_token))
+    connection_bot = UserProcessing(conn_db, ClassVK(community_token))
     print(f"Бот запущен")
 
     for event in longpoll.listen():
