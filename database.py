@@ -1,196 +1,269 @@
+# -*- coding: utf-8 -*-
+
 import psycopg2
-from Initial_data import Username, Password, Host, Database
+from Initial_data import Username, Password, Host, Database_vk, Port
 from database_tables import *
 from dataclass import *
+from peewee import *
 
 
-class DataBase(object):
+conn_db = PostgresqlDatabase(database=Database_vk, user=Username, password=Password, host=Host, port=Port)
 
-    def __init__(self):
+class BaseModel(Model):
 
-        self.connection = psycopg2.connect(host=Host,
-                                           user=Username,
-                                           password=Password,
-                                           database=Database)
+    class Meta:
+        database = conn_db
 
-        self.connection.autocommit = True
-        cursor = self.connection.cursor()
-        print("Подключение установлено")
+class vk_user(BaseModel):
+    id = IntegerField(null=True)
+    vk_id = IntegerField(primary_key=True)
+    first_name = CharField(null=False)
+    last_name = CharField(null=True)
 
-        cursor.execute(CREATE_TABLES)
+    class Meta:
+        db_table = 'vk_user'
 
-    def get_vkuser(self, vk_id: int) -> VKUserData:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "SELECT * FROM vk_user WHERE vk_id == vk_id"
-            cursor.execute(query, (vk_id,))
-            result = cursor.fetchone()
-        if result is not None:
-            vk_user = VKUserData(list(result))
-        else:
-            vk_user = None
-        return vk_user
 
-    def id_in_database(self, vk_id: int) -> bool:
+class favorites(BaseModel):
+    vk_id = IntegerField(null=False)
+    fav_id = IntegerField(null=False)
+    primary_key = CompositeKey('vk_id', 'fav_id')
 
-        if self.get_vkuser(vk_id) is None:
-            return False
+    class Meta:
+        db_table = 'favorites'
+
+
+class black_list(BaseModel):
+    vk_id = IntegerField(null=False)
+    blk_id = IntegerField(null=False)
+    black_list_pk = CompositeKey('vk_id', 'blk_id')
+
+    class Meta:
+        db_table = 'black_list'
+
+
+class last_search(BaseModel):
+    vk_id = IntegerField(null=False)
+    lst_id = IntegerField(null=False)
+    srch_number = IntegerField(null=True)
+    last_search_pk = CompositeKey('vk_id', 'lst_id')
+
+    class Meta:
+        db_table = 'last_search'
+
+
+class settings(BaseModel):
+    vk_id = IntegerField(null=False)
+    age_from = IntegerField(null=True)
+    age_to = IntegerField(null=True)
+
+    class Meta:
+        db_table = 'settings'
+
+
+def get_vkuser(vk_id: int) -> VKUserData:
+    if not vk_user.table_exists():
+        vk_user.create_table()
+    try:
+        vk_users = vk_user.get().where(vk_id=vk_id)
+        return VKUserData(list[vk_users])
+    except:
+        return None
+
+
+def id_in_database(vk_id: int) -> bool:
+    if get_vkuser(vk_id) is None:
+        return False
+    return True
+
+
+def new_vkuser(vk_user_data: VKUserData) -> bool:
+    if not vk_user.table_exists():
+        vk_user.create_table()
+    try:
+        vk_user_model = vk_user(vk_id=vk_user_data.vk_id, first_name=vk_user_data.first_name, last_name=vk_user_data.last_name)
+        vk_user_model.save()
         return True
+    except:
+        return False
 
-    def new_vkuser(self, vk_user: VKUserData) -> bool:
-        res = True
-        with self.connection, self.connection.cursor() as cursor:
-            if not self.id_in_database(vk_user.vk_id):
-                query = "INSERT INTO vk_user values( vk_id=vk_user.vk_id," \
-                        "first_name=vk_user.first_name," \
-                        "last_name=vk_user.last_name," \
-                        ")"
-                result = cursor.execute(query)
-                if result is None:
-                    res = False
-            return res
 
-    def insert_last_search(self, user_id, lst_ids, position):
-        with self.connection, self.connection.cursor() as cursor:
-            for lst_id in lst_ids:
-                query = "SELECT * FROM last_search WHERE vk_id == user_id AND lst_id == lst_id"
-                cursor.execute(query)
-                result = cursor.fetchone()
-                if result is not None:
-                    continue
-                query = "INSERT INTO last_search values( " \
-                        "vk_id=user_id," \
-                        "lst_id=lst_id," \
-                        "srch_number=position" \
-                        ")"
-                result = cursor.execute(query)
+def insert_last_search(user_id, lst_ids, position):
+    if not last_search.table_exists():
+        last_search.create_table()
+    result = True
+    try:
+        for lst_id in lst_ids:
+            if not last_search.get_or_none(vk_id=user_id, lst_id=lst_id):
+                last_search_model = last_search(vk_id=user_id, lst_id=lst_id, srch_number=position)
+                last_search_model.save()
                 position += 1
-            return result
-
-    def del_last_search_id(self, vk_id: int, lst_id: int) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "DELETE FROM last_seacrh WHERE vk_id == vk_id AND lst_id == lst_id"
-            result = cursor.execute(query)
-        if result is None:
-            return False
-        return True
-
-    def get_black_list(self, vk_id: int) -> list:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "SELECT * FROM black_list.c.blk_id WHERE vk_id == vk_id"
-            cursor.execute(query)
-            result = cursor.fetchall()
-        if result is None or len(result) == 0:
-            return list()
-        return list.copy(result)
-
-    def del_black_id(self, vk_id: int, blk_id: int) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "DELETE FROM black_list WHERE vk_id == vk_id AND blk_id == blk_id"
-            result = cursor.execute(query)
-        if result is None:
-            return False
-        return True
-
-    def get_favorites(self, vk_id: int) -> list:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "SELECT * FROM favorites.c.fav_id WHERE vk_id == vk_id"
-            cursor.execute(query)
-            result = cursor.fetchall()
-        if result is None or len(result) == 0:
-            return list()
-        return list.copy(result)
-
-    def new_favorite(self, vk_id: int, fav_id: int) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "SELECT * FROM last_search WHERE vk_id == vk_id AND fav_id == fav_id"
-            cursor.execute(query)
-            result = cursor.fetchone()
-        if result is not None:
-            query = "INSERT INTO favorites values( vk_id=vk_id,fav_id=fav_id)"
-            cursor.execute(query)
-            self.del_last_search_id(vk_id, fav_id)
-            self.del_black_id(vk_id, fav_id)
-        return True
-
-    def del_favotite(self, vk_id: int, fav_id: int) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "DELETE FROM favorites WHERE vk_id == vk_id AND fav_id == fav_id"
-            cursor.execute(query)
-        return True
-
-    def del_all_favorites(self, vk_id: int) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "DELETE FROM favorites WHERE vk_id == vk_id"
-            cursor.execute(query)
-        return True
-
-    def new_black_id(self, vk_id: int, blk_id: int) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-          query = "SELECT * FROM black_list WHERE vk_id == vk_id AND blk_id == blk_id"
-          cursor.execute(query)
-          result = cursor.fetchone()
-        if result is not None:
-            query = "INSERT INTO black_list values( vk_id=vk_id,blk_id=blk_id)"
-            cursor.execute(query)
-            self.del_last_search_id(vk_id, blk_id)
-            self.del_black_id(vk_id, blk_id)
-        return True
-
-    def del_all_last_search(self, vk_id: int) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "DELETE FROM last_search WHERE vk_id == vk_id"
-            cursor.execute(query)
-        return True
-
-    def del_black_list(self, vk_id: int) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "DELETE FROM black_list WHERE vk_id == vk_id"
-            cursor.execute(query)
-        return True
-
-    def is_black(self, vk_id: int, blk_id: int) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "SELECT * FROM black_list WHERE vk_id == vk_id AND blk_id == blk_id"
-            cursor.execute(query)
-            result = cursor.fetchone()
-        if result is None:
-            return False
-        else:
-            return True
-
-    def get_settings(self, vk_user: VKUserData) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "SELECT * FROM settings WHERE vk_id == vk_id"
-            cursor.execute(query)
-            result = cursor.fetchone()
-        if result is None:
-            return False
-        else:
-            vk_user.set_settings_from_list(list(result)[1:])
-            return True
-
-    def get_user(self, user_id, srch_number):
-        with self.connection, self.connection.cursor() as cursor:
-            query = "SELECT * FROM last_search.c.lst_id WHERE vk_id == user_id AND srch_number == srch_number"
-            cursor.execute(query)
-            result = cursor.fetchone()
         return result
+    except:
+        return False
 
-    def set_settings(self, vk_user: VKUserData) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "INSERT INTO settings values( vk_id=vk_user.vk_id," \
-                        "srch_offset=vk_user.settings.srch_offset," \
-                        "age_from=vk_user.settings.age_from," \
-                        "age_to=vk_user.settings.age_to," \
-                        ")"
-            cursor.execute(query)
+def del_last_search_id(vk_id: int, lst_id: int) -> bool:
+    if not last_search.table_exists():
+        last_search.create_table()
+    try:
+        last_search_model = last_search.get().where(vk_id=vk_id, lst_id=lst_id)
+        last_search_model.delete_instance()
         return True
+    except:
+        return False
 
-    def upd_settings(self, vk_user: VKUserData) -> bool:
-        with self.connection, self.connection.cursor() as cursor:
-            query = "UPDATE settings SET values WHERE vk_id == vk.user.vk_id"
-            result = cursor.execute(query, (vk_user.vk_id,))
-        if result is None:
+
+def get_black_list(vk_id: int) -> list:
+    if not black_list.table_exists():
+        black_list.create_table()
+    try:
+        result = black_list.select().where(black_list.vk_id == vk_id)
+        return [row.blk_id for row in result]
+    except:
+        return list()
+
+
+def del_black_id(vk_id: int, blk_id: int) -> bool:
+    if not black_list.table_exists():
+        black_list.create_table()
+    try:
+        black_list_model = black_list.get(vk_id=vk_id, blk_id=blk_id)
+        black_list_model.delete_instance()
+        return True
+    except:
+        return False
+
+def get_favorites(vk_id: int) -> list:
+    if not favorites.table_exists():
+        favorites.create_table()
+    try:
+        result = favorites.select().where(favorites.vk_id == vk_id)
+        return [row.fav_id for row in result]
+    except:
+        return list()
+
+
+def new_favorite(vk_id: int, fav_id: int) -> bool:
+    if not black_list.table_exists():
+        black_list.create_table()
+    if not last_search.table_exists():
+        last_search.create_table()
+    if not favorites.table_exists():
+        favorites.create_table()
+    try:
+        if black_list.get(vk_id=vk_id, blk_id=fav_id):
+            black_list.delete().where(black_list.vk_id==vk_id, black_list.blk_id==fav_id).execute()
+        if last_search.get(vk_id=vk_id, search_id=fav_id):
+            last_search.delete().where(last_search.vk_id==vk_id, last_search.search_id==fav_id).execute()
+        new_fav = favorites(vk_id=vk_id, fav_id=fav_id)
+        new_fav.save()
+        return True
+    except:
+        return False
+
+
+def del_favorite(vk_id: int, fav_id: int) -> bool:
+    if not favorites.table_exists():
+        favorites.create_table()
+    try:
+        favorites.delete().where(favorites.vk_id==vk_id, favorites.fav_id==fav_id).execute()
+        return True
+    except:
+        return False
+
+def del_all_favorites(vk_id: int) -> bool:
+    if not favorites.table_exists():
+        favorites.create_table()
+    try:
+        favorites.delete().where(favorites.vk_id==vk_id).execute()
+        return True
+    except:
+        return False
+
+def new_black_id(vk_id: int, blk_id: int) -> bool:
+    if not last_search.table_exists():
+        last_search.create_table()
+    if not black_list.table_exists():
+        black_list.create_table()
+    try:
+        if last_search.get(vk_id=vk_id, search_id=blk_id):
+            last_search.delete().where(last_search.vk_id==vk_id, last_search.search_id==blk_id).execute()
+        if black_list.get(vk_id=vk_id, blk_id=blk_id):
             return False
+        new_black_list_row = black_list(vk_id=vk_id, blk_id=blk_id)
+        new_black_list_row.save()
         return True
+    except:
+        return False
+
+def del_all_last_search(vk_id: int) -> bool:
+    if not last_search.table_exists():
+        last_search.create_table()
+    try:
+        last_search.delete().where(last_search.vk_id==vk_id).execute()
+        return True
+    except:
+        return False
+
+def del_black_list(vk_id: int) -> bool:
+    if not black_list.table_exists():
+        black_list.create_table()
+    try:
+        black_list.delete().where(black_list.vk_id==vk_id).execute()
+        return True
+    except:
+        return False
+
+def is_black(vk_id: int, blk_id: int) -> bool:
+    if not black_list.table_exists():
+        black_list.create_table()
+    try:
+        black_list.get(vk_id=vk_id, blk_id=blk_id)
+        return True
+    except:
+        return False
+
+def get_settings(vk_user_data: VKUserData) -> bool:
+    if not settings.table_exists():
+        settings.create_table()
+    try:
+        settings_row = settings.get(settings.vk_id == vk_user_data.vk_id)
+        vk_user.set_settings_from_list([settings_row.srch_offset,
+                                        settings_row.age_from,
+                                        settings_row.age_to])
+        return True
+    except:
+        return False
+
+def get_user(user_id: int, srch_number: int):  # что тут должно возвращаться?
+    if not last_search.table_exists():
+        last_search.create_table()
+    try:
+        lst_row = last_search.get((last_search.vk_id == user_id) & (last_search.search_id == srch_number))
+        return lst_row
+    except:
+        return None
+
+def set_settings(vk_user_data: VKUserData) -> bool:
+    if not settings.table_exists():
+        settings.create_table()
+    try:
+        settings.create(vk_id=vk_user_data.vk_id,
+                        srch_offset=vk_user_data.settings.srch_offset,
+                        age_from=vk_user_data.settings.age_from,
+                        age_to=vk_user_data.settings.age_to)
+        return True
+    except:
+        return False
+
+def upd_settings(vk_user_data: VKUserData) -> bool:
+    if not settings.table_exists():
+        settings.create_table()
+    try:
+        settings.update(srch_offset=vk_user_data.settings.srch_offset,
+                        age_from=vk_user_data.settings.age_from,
+                        age_to=vk_user_data.settings.age_to).where(settings.vk_id==vk_user_data.vk_id).execute()
+        return True
+    except:
+        return False
 
