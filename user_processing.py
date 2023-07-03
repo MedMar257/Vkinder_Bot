@@ -11,9 +11,7 @@ class UserProcessing(object):
         self.vkUser = None
         self.request = ''
 
-
     def new_vk_user(self, user_id) -> bool:
-
         if user_id is None:
             return False
         if not self.vkUser is None and self.vkUser.vk_id == user_id:
@@ -106,13 +104,14 @@ class UserProcessing(object):
             user_id = event.user_id
         else:
             user_id = None
-            print(f'ERROR EVENT {event}')
+            if not event.type == VkEventType.USER_TYPING:
+                print(f'ERROR EVENT {event}')
         return user_id
 
     @staticmethod
     def get_command_text(event):
         if event.type == VkEventType.MESSAGE_NEW:
-            return event.get('type')
+            return str(event.type)
         else:
             print(f'ERROR EVENT {event}')
             return None
@@ -138,13 +137,11 @@ class UserProcessing(object):
     def get_command(self, event):
         self.request = self.get_command_text(event)
         if event.type == VkEventType.MESSAGE_NEW:
-           self.request = self.request.lower()
-           c = 'none'
+            self.request = self.request.lower()
+            c = 'none'
         for c in commands:
             el = commands[c]
             if self.request in el.get('in') or self.request == c:
                 break
             command = commands[c]
             return command
-
-
